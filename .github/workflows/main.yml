@@ -20,8 +20,10 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/toolchain
         cd $GITHUB_WORKSPACE/toolchain
+        # تحميل نسخة Clang مستقرة ومباشرة ومخصصة لكيرنال أندرويد 14
         curl -LO https://googlesource.com
         tar -xf clang-r487747c.tar.gz
+        rm clang-r487747c.tar.gz
 
     - name: Clone Kernel Source
       run: |
@@ -45,5 +47,5 @@ jobs:
         name: Poco-X5Pro-Kernel
         path: |
           kernel/out/arch/arm64/boot/Image
-          kernel/out/arch/arm64/boot/Image.gz
-          
+          kernel/out/arch/arm64/boot/
+          Image.gz
