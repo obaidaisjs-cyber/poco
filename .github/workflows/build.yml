@@ -35,11 +35,11 @@ jobs:
           scripts/kconfig/merge_config.sh -m arch/arm64/configs/gki_defconfig arch/arm64/configs/vendor/redwood_QGKI.config
           mv .config arch/arm64/configs/redwood_merged_defconfig
 
-      - name: Disable broken coresight driver
+      - name: Disable entire CORESIGHT subsystem
         run: |
           cd kernel
-          sed -i '/CONFIG_CORESIGHT_BYTE_CNTR/d' arch/arm64/configs/redwood_merged_defconfig
-          echo "# CONFIG_CORESIGHT_BYTE_CNTR is not set" >> arch/arm64/configs/redwood_merged_defconfig
+          sed -i '/CONFIG_CORESIGHT/d' arch/arm64/configs/redwood_merged_defconfig
+          echo "# CORESIGHT disabled entirely" >> arch/arm64/configs/redwood_merged_defconfig
 
       - name: Disable forbidden-warning wrapper
         run: |
