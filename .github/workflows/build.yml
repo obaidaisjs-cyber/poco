@@ -41,22 +41,39 @@ jobs:
           sed -i '/CONFIG_CORESIGHT/d' arch/arm64/configs/redwood_merged_defconfig
           echo "# CORESIGHT disabled entirely" >> arch/arm64/configs/redwood_merged_defconfig
 
+      - name: Create patch script
+        run: |
+          cat > /tmp/patch_selinux.py << 'PYEOF'
+          import re
+          import sys
+
+          filepath = sys.argv[1]
+          with open(filepath, 'r') as f:
+              content = f.read()
+
+          content = re.sub(
+              r'void ksu_selinux_hide_enable\(void\)\s*\{.*?\n\}',
+              'void ksu_selinux_hide_enable(void) { }',
+              content, flags=re.DOTALL
+          )
+          content = re.sub(
+              r'void ksu_selinux_hide_disable\(void\)\s*\{.*?\n\}',
+              'void ksu_selinux_hide_disable(void) { }',
+              content, flags=re.DOTALL
+          )
+
+          with open(filepath, 'w') as f:
+              f.write(content)
+          print('Patched successfully')
+          PYEOF
+
       - name: Find and patch selinux_hide.c
         run: |
           cd kernel
           FILE=$(find . -iname "selinux_hide.c" | head -1)
           echo "Found: $FILE"
           if [ -n "$FILE" ]; then
-            python3 -c "
-import re
-with open('$FILE', 'r') as f:
-    content = f.read()
-content = re.sub(r'void ksu_selinux_hide_enable\(void\)\s*\{.*?\n\}', 'void ksu_selinux_hide_enable(void) { }', content, flags=re.DOTALL)
-content = re.sub(r'void ksu_selinux_hide_disable\(void\)\s*\{.*?\n\}', 'void ksu_selinux_hide_disable(void) { }', content, flags=re.DOTALL)
-with open('$FILE', 'w') as f:
-    f.write(content)
-print('Patched with stub functions')
-"
+            python3 /tmp/patch_selinux.py "$FILE"
             grep -n "ksu_selinux_hide_enable\|ksu_selinux_hide_disable" "$FILE"
           else
             echo "FILE NOT FOUND"
