@@ -14,7 +14,17 @@ jobs:
       run: |
         git clone --depth=1 https://github.com/MiCode/Xiaomi_Kernel_OpenSource -b redwood-s-oss kernel-source
 
+    - name: Cache Toolchain
+      id: cache-toolchain
+      uses: actions/cache@v4
+      with:
+        path: |
+          toolchain
+          clang
+        key: ${{ runner.os }}-toolchain
+
     - name: Setup Toolchain
+      if: steps.cache-toolchain.outputs.cache-hit != 'true'
       run: |
         sudo apt update
         sudo apt install -y git make flex bison bc cpio python-is-python3
@@ -33,6 +43,17 @@ jobs:
         echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/vendor/redwood_GKI.config
         scripts/kconfig/merge_config.sh -m arch/arm64/configs/gki_defconfig arch/arm64/configs/vendor/redwood_GKI.config
         mv .config arch/arm64/configs/redwood_merged_defconfig
+
+    - name: Fix missing pinctrl-utils.h
+      run: |
+        cd kernel-source
+        echo '#include <linux/pinctrl/pinctrl.h>' > techpack/audio/soc/pinctrl-utils.h
+        echo '#include <linux/device.h>' >> techpack/audio/soc/pinctrl-utils.h
+
+    - name: Fix deprecated function prototype
+      run: |
+        cd kernel-source
+        sed -i 's/cam_debug_get_settings()/cam_debug_get_settings(void)/g' techpack/camera/drivers/cam_utils/cam_debug_util.c
 
     - name: Build Kernel
       run: |
