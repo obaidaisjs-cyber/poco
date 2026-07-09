@@ -17,13 +17,16 @@ jobs:
     - name: Setup Toolchain
       run: |
         sudo apt update
-        sudo apt install -y git make gcc flex bison bc cpio python-is-python3
+        sudo apt install -y git make flex bison bc cpio python-is-python3
         git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 toolchain
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-4639204.tar.gz
+        mkdir clang && tar -xzf clang-4639204.tar.gz -C clang
 
     - name: Merge Config Fragment
       run: |
         cd kernel-source
         export ARCH=arm64
+        export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
         export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/aarch64-linux-android-
         echo "CONFIG_KSU=y" >> arch/arm64/configs/vendor/redwood_GKI.config
         echo "CONFIG_KPROBES=y" >> arch/arm64/configs/vendor/redwood_GKI.config
@@ -36,9 +39,10 @@ jobs:
       run: |
         cd kernel-source
         export ARCH=arm64
+        export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
         export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/aarch64-linux-android-
-        make redwood_merged_defconfig
-        make -j$(nproc)
+        make -j$(nproc) CC=clang redwood_merged_defconfig
+        make -j$(nproc) CC=clang
 
     - name: Upload Boot Image
       uses: actions/upload-artifact@v4
