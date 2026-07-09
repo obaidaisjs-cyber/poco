@@ -41,6 +41,17 @@ jobs:
           sed -i '/CONFIG_CORESIGHT/d' arch/arm64/configs/redwood_merged_defconfig
           echo "# CORESIGHT disabled entirely" >> arch/arm64/configs/redwood_merged_defconfig
 
+      - name: Patch broken lines in selinux_hide.c (keep rest of feature intact)
+        run: |
+          cd kernel
+          FILE=$(find . -path "*kernelsu/feature/selinux_hide.c")
+          echo "Found: $FILE"
+          if [ -n "$FILE" ]; then
+            sed -i 's/^\(\s*slow_avc_audit_kp = init_kprobe(.*\)$/\/\/ \1/' "$FILE"
+            sed -i 's/^\(\s*destroy_kprobe(&slow_avc_audit_kp);\)$/\/\/ \1/' "$FILE"
+            grep -n "slow_avc_audit_kp\|init_kprobe\|destroy_kprobe" "$FILE" || true
+          fi
+
       - name: Disable forbidden-warning wrapper
         run: |
           cd kernel
