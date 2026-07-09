@@ -41,6 +41,18 @@ jobs:
           sed -i '/CONFIG_CORESIGHT/d' arch/arm64/configs/redwood_merged_defconfig
           echo "# CORESIGHT disabled entirely" >> arch/arm64/configs/redwood_merged_defconfig
 
+      - name: Fix icnss2 struct name typo
+        run: |
+          cd kernel
+          FILE=$(find . -path "*soc/qcom/icnss2/qmi.h")
+          echo "Found: $FILE"
+          if [ -n "$FILE" ]; then
+            sed -i 's/struct icns_priv/struct icnss_priv/g' "$FILE"
+            grep -n "struct icnss_priv" "$FILE" | head -5
+          else
+            echo "FILE NOT FOUND"
+          fi
+
       - name: Create patch script
         run: |
           cat > /tmp/patch_selinux.py << 'PYEOF'
