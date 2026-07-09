@@ -44,16 +44,19 @@ jobs:
         scripts/kconfig/merge_config.sh -m arch/arm64/configs/gki_defconfig arch/arm64/configs/vendor/redwood_GKI.config
         mv .config arch/arm64/configs/redwood_merged_defconfig
 
-    - name: Fix missing pinctrl-utils.h
+    - name: Create missing directory and file
       run: |
         cd kernel-source
+        mkdir -p techpack/audio/soc
         echo '#include <linux/pinctrl/pinctrl.h>' > techpack/audio/soc/pinctrl-utils.h
         echo '#include <linux/device.h>' >> techpack/audio/soc/pinctrl-utils.h
 
     - name: Fix deprecated function prototype
       run: |
         cd kernel-source
-        sed -i 's/cam_debug_get_settings()/cam_debug_get_settings(void)/g' techpack/camera/drivers/cam_utils/cam_debug_util.c
+        if [ -f techpack/camera/drivers/cam_utils/cam_debug_util.c ]; then
+          sed -i 's/cam_debug_get_settings()/cam_debug_get_settings(void)/g' techpack/camera/drivers/cam_utils/cam_debug_util.c
+        fi
 
     - name: Build Kernel
       run: |
