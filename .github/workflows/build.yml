@@ -40,8 +40,8 @@ jobs:
         export ARCH=arm64
         export PATH=$GITHUB_WORKSPACE/clang/bin:$PATH
         export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/aarch64-linux-android-
-        make -j$(nproc) CC=clang redwood_merged_defconfig
-        make -j$(nproc) CC=clang
+        make -j$(nproc) CC=clang CLANG_TRIPLE=aarch64-linux-gnu- redwood_merged_defconfig
+        make -j$(nproc) CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
 
     - name: Upload Boot Image
       uses: actions/upload-artifact@v4
